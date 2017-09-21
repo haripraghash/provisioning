@@ -1,0 +1,149 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "keyVaultName": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "KeyVault name"
+      }
+    },
+    //"permissionObjectIds": {
+    //  "type": "array",
+    //  "defaultValue": "{}",
+    //  "metadata": {
+    //    "description": "Set of object ids which needs permission on the key vault"
+    //  }
+    //},
+    "logsRetentionInDays": {
+      "type": "int",
+      "defaultValue": 0,
+      "minValue": 0,
+      "maxValue": 365,
+      "metadata": {
+        "description": "Specifies the number of days that logs are gonna be kept. If you do not want to apply any retention policy and retain data forever, set value to 0."
+      }
+    },
+    "enableVaultForDeployment": {
+      "type": "bool",
+      "defaultValue": false,
+      "allowedValues": [
+        true,
+        false
+      ],
+      "metadata": {
+        "description": "Specifies if the vault is enabled for deployment by script or compute (VM, Service Fabric, ...)"
+      }
+    },
+    "enableVaultForTemplateDeployment": {
+      "type": "bool",
+      "defaultValue": false,
+      "allowedValues": [
+        true,
+        false
+      ],
+      "metadata": {
+        "description": "Specifies if the vault is enabled for a template deployment"
+      }
+    },
+    "enableVaultForDiskEncryption": {
+      "type": "bool",
+      "defaultValue": false,
+      "allowedValues": [
+        true,
+        false
+      ],
+      "metadata": {
+        "description": "Specifies if the azure platform has access to the vault for enabling disk encryption scenarios."
+      }
+    },
+    "vaultSku": {
+      "type": "string",
+      "defaultValue": "Standard",
+      "allowedValues": [
+        "Standard",
+        "Premium"
+      ],
+      "metadata": {
+        "description": "Specifies the SKU for the vault"
+      }
+    }
+  },
+  "variables": {
+    "uniqueString": "[uniqueString(subscription().id, resourceGroup().id)]",
+    "diagnosticStorageAccountName": "[toLower( substring( replace( concat( parameters('keyVaultName'), variables('uniqueString'), variables('uniqueString') ), '-', ''), 0, 23) )]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "name": "[parameters('keyVaultName')]",
+      "apiVersion": "2016-10-01",
+      "Location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "Key Vault with logging"
+      },
+      "properties": {
+        "enabledForDeployment": "[parameters('enableVaultForDeployment')]",
+        "enabledForTemplateDeployment": "[parameters('enableVaultForTemplateDeployment')]",
+        "enabledForDiskEncryption": "[parameters('enableVaultForDiskEncryption')]",
+        "tenantId": "[subscription().tenantId]",
+        "accessPolicies": [
+          {
+            "tenantId": "[subscription().tenantId]",
+            "objectId": "0308ff73-75c5-47c1-acb2-fb49c60be11f",
+            "permissions": {
+              "keys": [ "all" ],
+              "secrets": [ "all" ],
+              "certificates": [ "all" ]
+            }
+          }
+        ],
+        "sku": {
+          "name": "[parameters('vaultSku')]",
+          "family": "A"
+        }
+      },
+      "resources": [
+        {
+          "type": "Microsoft.KeyVault/vaults/providers/diagnosticsettings",
+          "name": "[concat(parameters('keyVaultName'), '/Microsoft.Insights/service')]",
+          "apiVersion": "2016-09-01",
+          "Location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]",
+            "[concat('Microsoft.Storage/storageAccounts/', variables('diagnosticStorageAccountName'))]"
+          ],
+          "properties": {
+            "storageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', variables('diagnosticStorageAccountName'))]",
+            "logs": [
+              {
+                "category": "AuditEvent",
+                "enabled": true,
+                "retentionPolicy": {
+                  "enabled": true,
+                  "days": "[parameters('LogsRetentionInDays')]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "apiVersion": "2016-12-01",
+      "kind": "Storage",
+      "Location": "[resourceGroup().location]",
+      "name": "[variables('diagnosticStorageAccountName')]",
+      "properties": {},
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "tags": {
+        "displayName": "concat('Key Vault ', parameters('keyVaultName'), ' diagnostics storage account')"
+      },
+      "type": "Microsoft.Storage/storageAccounts"
+    }
+  ],
+  "outputs": {}
+}
