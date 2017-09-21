@@ -34,6 +34,7 @@
     <Content Include="README.md" />
     <Content Include="nestedtemplates\protectwithlocksdisabled.json" />
     <Content Include="nestedtemplates\protectwithlocksenabled.json" />
+    <None Include="packages.config" />
     <None Include="Provisioning.Azure.KeyVault.nuspec">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
