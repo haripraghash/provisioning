@@ -1,1 +1,3 @@
 C:\Users\hario\Source\Repos\Provisioning.Azure.KeyVault\Provisioning.Azure.KeyVault\obj\Debug\Provisioning.Azure.KeyVault.deployproj.CoreCompileInputs.cache
+C:\Users\hario\git\Provisioning.Azure.KeyVault\Provisioning.Azure.KeyVault\bin\Debug\Provisioning.Azure.KeyVault.nuspec
+C:\Users\hario\git\Provisioning.Azure.KeyVault\Provisioning.Azure.KeyVault\obj\Debug\Provisioning.Azure.KeyVault.deployproj.CoreCompileInputs.cache
