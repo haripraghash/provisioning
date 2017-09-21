@@ -11,6 +11,6 @@
     <language>en-gb</language>
   </metadata>
   <files>
-    <file src="Provisioning.Azure.KeyVault\bin\Release\**" />
+    <file src="bin\Release\**" />
   </files>
 </package>
